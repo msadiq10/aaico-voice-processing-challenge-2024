@@ -4,6 +4,7 @@ import time
 import threading
 import queue
 import pickle
+from tensorflow.keras.models import load_model
 
 ########### PARAMETERS ###########
 # DO NOT MODIFY
@@ -29,6 +30,8 @@ number_of_frames = len(audio_data_int16) // frame_length
 audio_data_int16 = audio_data_int16[:number_of_frames * frame_length]
 audio_duration = len(audio_data_int16) / sample_rate
 
+# load model
+model = load_model('my_model.h5')
 
 ########### STREAMING SIMULATION ###########
 # DO NOT MODIFY
@@ -45,6 +48,11 @@ def label_samples(list_samples_id, labels):
 def notice_send_samples(list_samples_id):
     send_time = time.time_ns()
     results[0][list_samples_id] = send_time
+
+def extract_features(frame):
+    mfcc = librosa.feature.mfcc(y=frame.astype(float), sr=sample_rate, n_mfcc=13)
+    mfcc_processed = np.mean(mfcc.T, axis=0)
+    return mfcc_processed.reshape(1, -1) 
 
 def emit_data(): 
     time.sleep(.5)
@@ -68,7 +76,13 @@ def process_data():
         ### TODO: YOUR CODE
         # MODIFY
         list_samples_id = np.arange(i*frame_length, (i+1)*frame_length)
-        labels = [1 for _ in range(len(list_samples_id))]
+
+        # Extract features and predict using the model
+        features = extract_features(frame)
+        prediction = model.predict(features)
+        label = np.argmax(prediction) 
+
+        labels = [label for _ in range(len(list_samples_id))]
         ###
 
         label_samples(list_samples_id, labels)
