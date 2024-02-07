@@ -54,11 +54,8 @@ def notice_send_samples(list_samples_id):
 def extract_features(frame):
     mfcc = librosa.feature.mfcc(y=frame.astype(float), sr=sample_rate, n_mfcc=13, hop_length=512, n_fft=512)
     mfcc = mfcc.T
-    mfcc = mfcc[:len(frame) // frame_length]
-    scaler = StandardScaler()
-    mfcc = scaler.fit_transform(mfcc)
-    mfcc.shape
-    return mfcc.reshape(1, -1)
+    mfcc = np.array(mfcc)
+    return mfcc
 
 def emit_data(): 
     time.sleep(.5)
@@ -85,6 +82,7 @@ def process_data():
 
         # Extract features and predict using the model
         features = extract_features(frame)
+        features = features.reshape((1, features.shape[0], features.shape[1]))
         prediction = model.predict(features)
         # label = prediction
         label = np.argmax(prediction) 
