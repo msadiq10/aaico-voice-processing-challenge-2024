@@ -5,6 +5,8 @@ import threading
 import queue
 import pickle
 from tensorflow.keras.models import load_model
+from sklearn.preprocessing import StandardScaler
+
 
 ########### PARAMETERS ###########
 # DO NOT MODIFY
@@ -50,9 +52,13 @@ def notice_send_samples(list_samples_id):
     results[0][list_samples_id] = send_time
 
 def extract_features(frame):
-    mfcc = librosa.feature.mfcc(y=frame.astype(float), sr=sample_rate, n_mfcc=13)
-    mfcc_processed = np.mean(mfcc.T, axis=0)
-    return mfcc_processed.reshape(1, -1) 
+    mfcc = librosa.feature.mfcc(y=frame.astype(float), sr=sample_rate, n_mfcc=13, hop_length=512, n_fft=512)
+    mfcc = mfcc.T
+    mfcc = mfcc[:len(frame) // frame_length]
+    scaler = StandardScaler()
+    mfcc = scaler.fit_transform(mfcc)
+    mfcc.shape
+    return mfcc.reshape(1, -1)
 
 def emit_data(): 
     time.sleep(.5)
@@ -80,6 +86,7 @@ def process_data():
         # Extract features and predict using the model
         features = extract_features(frame)
         prediction = model.predict(features)
+        # label = prediction
         label = np.argmax(prediction) 
 
         labels = [label for _ in range(len(list_samples_id))]
