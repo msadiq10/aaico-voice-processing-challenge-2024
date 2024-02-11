@@ -5,6 +5,11 @@ import threading
 import queue
 import pickle
 
+import torch
+from model.model import AudioClassifier
+from model.preprocessing import process
+from train_test.predict import predict
+
 ########### PARAMETERS ###########
 # DO NOT MODIFY
 # Desired sample rate 16000 Hz
@@ -62,14 +67,21 @@ def process_data():
     i = 0
     start_event.wait()
     print('Start processing')
+
+    # LOADING THE MODEL 
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
+    audioModel = AudioClassifier()
+    audioModel.load_state_dict(torch.load('model/model.pkl'))
+    audioModel.eval()
+
     while i != number_of_frames:
         frame = buffer.get()
         
-        ### TODO: YOUR CODE
-        # MODIFY
+        data = process(frame)
+        l = predict(audioModel, data, device)
         list_samples_id = np.arange(i*frame_length, (i+1)*frame_length)
-        labels = [1 for _ in range(len(list_samples_id))]
-        ###
+        labels = [l for _ in range(len(list_samples_id))]
 
         label_samples(list_samples_id, labels)
         i += 1
