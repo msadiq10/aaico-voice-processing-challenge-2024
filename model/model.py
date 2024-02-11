@@ -49,9 +49,6 @@ class AudioClassifier(nn.Module):
         # Wrap the Convolutional Blocks
         self.conv = nn.Sequential(*conv_layers)
  
-    # ----------------------------
-    # Forward pass computations
-    # ----------------------------
     def forward(self, x):
         # Run the convolutional blocks
         x = self.conv(x)
